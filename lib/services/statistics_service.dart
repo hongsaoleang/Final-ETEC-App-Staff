@@ -5,7 +5,13 @@ import 'package:bus_staff_scanner/config.dart';
 
 class StatisticsService {
   final Dio _dio;
-  StatisticsService() : _dio = Dio(BaseOptions(baseUrl: apiBase)) {
+  StatisticsService()
+      : _dio = Dio(
+          BaseOptions(
+            baseUrl: apiBase,
+            headers: {'Accept': 'application/json'},
+          ),
+        ) {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onError: (e, handler) {

@@ -16,13 +16,18 @@ class _ScanScreenState extends State<ScanScreen> {
   QRViewController? controller;
   bool _isProcessing = false;
   String? _errorMessage;
+  bool _isFlashOn = false;
   final TicketService _ticketService = TicketService();
 
   @override
   void reassemble() {
     super.reassemble();
     if (controller != null) {
-      controller!.pauseCamera();
+      if (Theme.of(context).platform == TargetPlatform.android) {
+        controller!.pauseCamera();
+      } else {
+        controller!.resumeCamera();
+      }
     }
   }
 
@@ -43,6 +48,28 @@ class _ScanScreenState extends State<ScanScreen> {
       if (!_isProcessing && scanData.code != null) {
         _processQRCode(scanData.code!);
       }
+    });
+  }
+
+  void _toggleFlash() async {
+    if (controller != null) {
+      await controller!.toggleFlash();
+      setState(() => _isFlashOn = !_isFlashOn);
+    }
+  }
+
+  void _switchCamera() {
+    if (controller != null) {
+      controller!.flipCamera();
+    }
+  }
+
+  void _resumeCamera() {
+    controller?.resumeCamera();
+    setState(() {
+      _isProcessing = false;
+      _errorMessage = null;
+      result = null;
     });
   }
 
@@ -73,7 +100,7 @@ class _ScanScreenState extends State<ScanScreen> {
           onCheckIn: () async {
             Navigator.of(context).pop();
             if (ticket != null) {
-              await _checkInTicket(ticket.id);
+              await _checkInTicket(ticket.ticketNumber);
             }
           },
         ),
@@ -107,9 +134,9 @@ class _ScanScreenState extends State<ScanScreen> {
     }
   }
 
-  Future<void> _checkInTicket(int ticketId) async {
+  Future<void> _checkInTicket(String ticketNumber) async {
     try {
-      final success = await _ticketService.checkInTicket(ticketId);
+      final success = await _ticketService.checkInTicket(ticketNumber);
 
       if (!mounted) return;
 
@@ -117,6 +144,7 @@ class _ScanScreenState extends State<ScanScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Passenger checked in successfully')),
         );
+        controller?.resumeCamera();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Failed to check in passenger')),
@@ -135,57 +163,92 @@ class _ScanScreenState extends State<ScanScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Scan Ticket'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
-      body: Column(
+      extendBodyBehindAppBar: true,
+      body: Stack(
         children: [
-          Expanded(
-            flex: 4,
-            child: QRView(
-              key: qrKey,
-              onQRViewCreated: _onQRViewCreated,
-              overlay: QrScannerOverlayShape(
-                borderColor: Colors.green,
-                borderRadius: 10,
-                borderLength: 30,
-                borderWidth: 10,
-                cutOutSize: 250,
+          QRView(
+            key: qrKey,
+            onQRViewCreated: _onQRViewCreated,
+            overlay: QrScannerOverlayShape(
+              borderColor: Colors.green,
+              borderRadius: 10,
+              borderLength: 30,
+              borderWidth: 10,
+              cutOutSize: 250,
+            ),
+          ),
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 8,
+            right: 16,
+            child: Row(
+              children: [
+                IconButton(
+                  icon: Icon(
+                    _isFlashOn ? Icons.flash_on : Icons.flash_off,
+                    color: Colors.white,
+                  ),
+                  onPressed: _toggleFlash,
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.black54,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(Icons.cameraswitch, color: Colors.white),
+                  onPressed: _switchCamera,
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.black54,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              color: Colors.black54,
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (_isProcessing)
+                    const CircularProgressIndicator()
+                  else if (result != null)
+                    Text(
+                      'Scan Result: ${result!.code}',
+                      style: const TextStyle(fontSize: 18, color: Colors.white),
+                      textAlign: TextAlign.center,
+                    )
+                  else
+                    const Text(
+                      'Point the camera at a QR code to scan a ticket',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 16, color: Colors.white70),
+                    ),
+                  const SizedBox(height: 16),
+                  if (_errorMessage != null)
+                    Text(
+                      'Error: $_errorMessage',
+                      style: TextStyle(color: Colors.red[300]),
+                      textAlign: TextAlign.center,
+                    ),
+                  if (result != null || _errorMessage != null)
+                    TextButton(
+                      onPressed: _resumeCamera,
+                      child: const Text(
+                        'Scan Again',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                ],
               ),
             ),
           ),
-          const SizedBox(height: 16),
-          if (_isProcessing)
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: CircularProgressIndicator(),
-            )
-          else if (result != null)
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                'Scan Result: ${result!.code}',
-                style: const TextStyle(fontSize: 18),
-                textAlign: TextAlign.center,
-              ),
-            )
-          else
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Text(
-                'Point the camera at a QR code to scan a ticket',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, color: Colors.grey),
-              ),
-            ),
-          const SizedBox(height: 16),
-          if (_errorMessage != null)
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                'Error: $_errorMessage',
-                style: TextStyle(color: Colors.red[600]),
-                textAlign: TextAlign.center,
-              ),
-            ),
         ],
       ),
     );

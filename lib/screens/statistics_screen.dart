@@ -93,7 +93,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                           const SizedBox(height: 16),
                           _buildStatCard(
                             'Completion Rate',
-                            '${(_statistics['completion_rate'] ?? 0).toStringAsFixed(1)}%',
+                            '${_toDouble(_statistics['completion_rate']).toStringAsFixed(1)}%',
                             Icons.show_chart,
                             Colors.purple,
                           ),
@@ -152,7 +152,10 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   }
 
   Widget _buildBoardingsList() {
-    final List<Map<String, dynamic>> boardings = _statistics['recent_boardings'] ?? [];
+    final boardings = (_statistics['recent_boardings'] as List? ?? [])
+        .whereType<Map>()
+        .map((boarding) => Map<String, dynamic>.from(boarding))
+        .toList();
 
     if (boardings.isEmpty) {
       return const Text('No recent boardings');
@@ -179,4 +182,9 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       },
     );
   }
+}
+
+double _toDouble(dynamic value) {
+  if (value is num) return value.toDouble();
+  return double.tryParse(value?.toString() ?? '') ?? 0;
 }

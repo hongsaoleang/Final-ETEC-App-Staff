@@ -51,6 +51,9 @@ dependencies:
   # For generating QR codes (if needed)
   qr: ^3.0.2
 
+  # Camera for live preview
+  camera: ^0.10.5+5
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
