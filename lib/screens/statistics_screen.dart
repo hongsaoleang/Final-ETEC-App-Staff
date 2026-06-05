@@ -42,80 +42,79 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Boarding Statistics'),
-      ),
+      appBar: AppBar(title: const Text('Boarding Statistics')),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _errorMessage != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('Error: $_errorMessage'),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _loadStatistics,
-                        child: const Text('Retry'),
-                      ),
-                    ],
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('Error: $_errorMessage'),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: _loadStatistics,
+                    child: const Text('Retry'),
                   ),
-                )
-              : _statistics.isEmpty
-                  ? const Center(
-                      child: Text('No statistics available'),
-                    )
-                  : SingleChildScrollView(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildStatCard(
-                            'Total Passengers',
-                            _statistics['total_passengers'] ?? 0,
-                            Icons.people,
-                            Colors.blue,
-                          ),
-                          const SizedBox(height: 16),
-                          _buildStatCard(
-                            'Checked In',
-                            _statistics['checked_in'] ?? 0,
-                            Icons.check_circle,
-                            Colors.green,
-                          ),
-                          const SizedBox(height: 16),
-                          _buildStatCard(
-                            'Pending',
-                            _statistics['pending'] ?? 0,
-                            Icons.pending_actions,
-                            Colors.orange,
-                          ),
-                          const SizedBox(height: 16),
-                          _buildStatCard(
-                            'Completion Rate',
-                            '${_toDouble(_statistics['completion_rate']).toStringAsFixed(1)}%',
-                            Icons.show_chart,
-                            Colors.purple,
-                          ),
-                          const SizedBox(height: 24),
-                          const Text(
-                            'Today\'s Boardings',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 8),
-                          _buildBoardingsList(),
-                        ],
-                      ),
-                    ),
+                ],
+              ),
+            )
+          : _statistics.isEmpty
+          ? const Center(child: Text('No statistics available'))
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildStatCard(
+                    'Total Passengers',
+                    _statistics['total_passengers'] ?? 0,
+                    Icons.people,
+                    Colors.blue,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildStatCard(
+                    'Checked In',
+                    _statistics['checked_in'] ?? 0,
+                    Icons.check_circle,
+                    Colors.green,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildStatCard(
+                    'Pending',
+                    _statistics['pending'] ?? 0,
+                    Icons.pending_actions,
+                    Colors.orange,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildStatCard(
+                    'Completion Rate',
+                    '${_toDouble(_statistics['completion_rate']).toStringAsFixed(1)}%',
+                    Icons.show_chart,
+                    Colors.purple,
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Today\'s Boardings',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildBoardingsList(),
+                ],
+              ),
+            ),
     );
   }
 
-  Widget _buildStatCard(String label, dynamic value, IconData icon, Color color) {
+  Widget _buildStatCard(
+    String label,
+    dynamic value,
+    IconData icon,
+    Color color,
+  ) {
     return Card(
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Row(
@@ -128,10 +127,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 children: [
                   Text(
                     label,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -175,8 +171,12 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
             style: TextStyle(fontSize: 12),
           ),
           trailing: Icon(
-            boarding['status'] == 'checked_in' ? Icons.check_circle : Icons.access_time,
-            color: boarding['status'] == 'checked_in' ? Colors.green : Colors.grey,
+            boarding['status'] == 'checked_in'
+                ? Icons.check_circle
+                : Icons.access_time,
+            color: boarding['status'] == 'checked_in'
+                ? Colors.green
+                : Colors.grey,
           ),
         );
       },

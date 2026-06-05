@@ -116,6 +116,7 @@ class _RouteTicketScreenState extends State<RouteTicketScreen> {
 
   Future<void> _openAddBookingSheet() async {
     await _loadSeats();
+    if (!mounted) return;
 
     final created = await showModalBottomSheet<bool>(
       context: context,
@@ -171,7 +172,9 @@ class _RouteTicketScreenState extends State<RouteTicketScreen> {
               ListTile(
                 leading: const Icon(Icons.person),
                 title: const Text('Passenger'),
-                subtitle: Text('${booking.passengerName}\n${booking.passengerEmail}'),
+                subtitle: Text(
+                  '${booking.passengerName}\n${booking.passengerEmail}',
+                ),
               ),
               ListTile(
                 leading: const Icon(Icons.confirmation_number),
@@ -196,11 +199,23 @@ class _RouteTicketScreenState extends State<RouteTicketScreen> {
                 subtitle: Text(booking.status),
               ),
               ListTile(
+                leading: const Icon(Icons.payments),
+                title: const Text('Payment'),
+                subtitle: Text(booking.paymentStatus),
+              ),
+              ListTile(
+                leading: Icon(
+                  booking.checkedIn ? Icons.verified : Icons.pending_actions,
+                ),
+                title: const Text('Check-in'),
+                subtitle: Text(
+                  booking.checkedIn ? 'Checked in' : 'Not checked in',
+                ),
+              ),
+              ListTile(
                 leading: const Icon(Icons.airplane_ticket),
                 title: const Text('Ticket'),
-                subtitle: Text(
-                  booking.ticketNumber ?? 'Not issued',
-                ),
+                subtitle: Text(booking.ticketNumber ?? 'Not issued'),
               ),
             ],
           ),
@@ -230,129 +245,130 @@ class _RouteTicketScreenState extends State<RouteTicketScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _errorMessage != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Text(_errorMessage!, textAlign: TextAlign.center),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: _loadBookings,
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            )
+          : Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: Text(_errorMessage!, textAlign: TextAlign.center),
+                      const Icon(Icons.directions_bus),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          '${widget.route.departureLocation} to ${widget.route.destination}\n'
+                          '${widget.route.date} at ${widget.route.departureTime}',
+                        ),
                       ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _loadBookings,
-                        child: const Text('Retry'),
-                      ),
+                      Text('${_bookings.length} tickets'),
                     ],
                   ),
-                )
-              : Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.directions_bus),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              '${widget.route.departureLocation} to ${widget.route.destination}\n'
-                              '${widget.route.date} at ${widget.route.departureTime}',
-                            ),
+                ),
+                const Divider(height: 1),
+                Expanded(
+                  child: _bookings.isEmpty
+                      ? const Center(
+                          child: Text(
+                            'No customer tickets for this route yet.',
                           ),
-                          Text('${_bookings.length} tickets'),
-                        ],
-                      ),
-                    ),
-                    const Divider(height: 1),
-                    Expanded(
-                      child: _bookings.isEmpty
-                          ? const Center(
-                              child: Text(
-                                'No customer tickets for this route yet.',
+                        )
+                      : ListView.separated(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: _bookings.length,
+                          separatorBuilder: (context, index) =>
+                              const SizedBox(height: 10),
+                          itemBuilder: (context, index) {
+                            final booking = _bookings[index];
+                            return Card(
+                              margin: EdgeInsets.zero,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
                               ),
-                            )
-                          : ListView.separated(
-                              padding: const EdgeInsets.all(16),
-                              itemCount: _bookings.length,
-                              separatorBuilder: (context, index) =>
-                                  const SizedBox(height: 10),
-                              itemBuilder: (context, index) {
-                                final booking = _bookings[index];
-                                return Card(
-                                  margin: EdgeInsets.zero,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: ListTile(
-                                    leading: Icon(
-                                      booking.checkedIn
-                                          ? Icons.check_circle
-                                          : Icons.confirmation_number,
-                                      color: booking.checkedIn
-                                          ? Colors.green
-                                          : Theme.of(context).colorScheme.primary,
-                                    ),
-                                    title: Text(booking.passengerName),
-                                    subtitle: Text(
-                                      '${booking.bookingReference} - ${booking.status}\n'
-                                      'Ticket: ${booking.ticketNumber ?? 'Not issued'}\n'
-                                      'Seats: ${booking.seats.isEmpty ? 'None' : booking.seats.join(', ')}',
-                                    ),
-                                    trailing: PopupMenuButton<String>(
-                                      onSelected: (value) {
-                                        if (value == 'delete') {
-                                          _deleteBooking(booking);
-                                        } else if (value == 'edit') {
-                                          _openEditBookingSheet(booking);
-                                        } else {
-                                          _updateBookingStatus(booking, value);
-                                        }
-                                      },
-                                      itemBuilder: (context) => const [
-                                        PopupMenuItem(
-                                          value: 'edit',
-                                          child: ListTile(
-                                            leading: Icon(Icons.edit),
-                                            title: Text('Edit booking'),
-                                          ),
-                                        ),
-                                        PopupMenuItem(
-                                          value: 'pending',
-                                          child: Text('Mark pending'),
-                                        ),
-                                        PopupMenuItem(
-                                          value: 'confirmed',
-                                          child: Text('Mark confirmed'),
-                                        ),
-                                        PopupMenuItem(
-                                          value: 'completed',
-                                          child: Text('Mark completed'),
-                                        ),
-                                        PopupMenuItem(
-                                          value: 'delete',
-                                          child: Text('Delete booking'),
-                                        ),
-                                      ],
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        crossAxisAlignment: CrossAxisAlignment.end,
-                                        children: [
-                                          Text(
-                                            '\$${booking.totalAmount.toStringAsFixed(2)}',
-                                          ),
-                                          const Icon(Icons.more_vert),
-                                        ],
+                              child: ListTile(
+                                leading: Icon(
+                                  booking.checkedIn
+                                      ? Icons.check_circle
+                                      : Icons.confirmation_number,
+                                  color: booking.checkedIn
+                                      ? Colors.green
+                                      : Theme.of(context).colorScheme.primary,
+                                ),
+                                title: Text(booking.passengerName),
+                                subtitle: Text(
+                                  '${booking.bookingReference} - ${booking.status}\n'
+                                  'Payment: ${booking.paymentStatus} - Check-in: ${booking.checkedIn ? 'Done' : 'Pending'}\n'
+                                  'Ticket: ${booking.ticketNumber ?? 'Not issued'}\n'
+                                  'Seats: ${booking.seats.isEmpty ? 'None' : booking.seats.join(', ')}',
+                                ),
+                                trailing: PopupMenuButton<String>(
+                                  onSelected: (value) {
+                                    if (value == 'delete') {
+                                      _deleteBooking(booking);
+                                    } else if (value == 'edit') {
+                                      _openEditBookingSheet(booking);
+                                    } else {
+                                      _updateBookingStatus(booking, value);
+                                    }
+                                  },
+                                  itemBuilder: (context) => const [
+                                    PopupMenuItem(
+                                      value: 'edit',
+                                      child: ListTile(
+                                        leading: Icon(Icons.edit),
+                                        title: Text('Edit booking'),
                                       ),
                                     ),
-                                    onTap: () => _showBookingDetails(booking),
+                                    PopupMenuItem(
+                                      value: 'pending',
+                                      child: Text('Mark pending'),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'confirmed',
+                                      child: Text('Mark confirmed'),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'completed',
+                                      child: Text('Mark completed'),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'delete',
+                                      child: Text('Delete booking'),
+                                    ),
+                                  ],
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Text(
+                                        '\$${booking.totalAmount.toStringAsFixed(2)}',
+                                      ),
+                                      const Icon(Icons.more_vert),
+                                    ],
                                   ),
-                                );
-                              },
-                            ),
-                    ),
-                  ],
+                                ),
+                                onTap: () => _showBookingDetails(booking),
+                              ),
+                            );
+                          },
+                        ),
                 ),
+              ],
+            ),
     );
   }
 }
@@ -390,7 +406,9 @@ class _BookingFormSheetState extends State<_BookingFormSheet> {
     _searchController = TextEditingController();
     if (widget.booking != null) {
       _selectedStatus = widget.booking!.status;
-      _selectedSeats = widget.seats.where((s) => widget.booking!.seats.contains(s.seatNumber)).toList();
+      _selectedSeats = widget.seats
+          .where((s) => widget.booking!.seats.contains(s.seatNumber))
+          .toList();
     }
   }
 
@@ -424,7 +442,7 @@ class _BookingFormSheetState extends State<_BookingFormSheet> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate() ||
-        _selectedPassenger == null ||
+        (widget.booking == null && _selectedPassenger == null) ||
         _selectedSeats.isEmpty) {
       return;
     }
@@ -433,10 +451,7 @@ class _BookingFormSheetState extends State<_BookingFormSheet> {
 
     try {
       final seatData = _selectedSeats
-          .map((s) => {
-                'seat_id': s.id,
-                'price': widget.route.basePrice,
-              })
+          .map((s) => {'seat_id': s.id, 'price': widget.route.basePrice})
           .toList();
 
       if (widget.booking == null) {
@@ -449,7 +464,7 @@ class _BookingFormSheetState extends State<_BookingFormSheet> {
       } else {
         await widget.routeService.updateBooking(
           bookingId: widget.booking!.id,
-          userId: _selectedPassenger!.id,
+          userId: _selectedPassenger?.id,
           seats: seatData,
           status: _selectedStatus,
         );
@@ -460,9 +475,9 @@ class _BookingFormSheetState extends State<_BookingFormSheet> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isSaving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to save booking: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to save booking: $e')));
     }
   }
 
@@ -530,7 +545,8 @@ class _BookingFormSheetState extends State<_BookingFormSheet> {
                         )
                         .toList(),
                     onChanged: (p) => setState(() => _selectedPassenger = p),
-                    validator: (value) => value == null ? 'Select a passenger' : null,
+                    validator: (value) =>
+                        value == null ? 'Select a passenger' : null,
                   ),
                 const SizedBox(height: 12),
                 InputDecorator(
@@ -544,12 +560,14 @@ class _BookingFormSheetState extends State<_BookingFormSheet> {
                       Wrap(
                         spacing: 8,
                         children: _selectedSeats
-                            .map((s) => Chip(
-                                  label: Text(s.seatNumber),
-                                  onDeleted: () {
-                                    setState(() => _selectedSeats.remove(s));
-                                  },
-                                ))
+                            .map(
+                              (s) => Chip(
+                                label: Text(s.seatNumber),
+                                onDeleted: () {
+                                  setState(() => _selectedSeats.remove(s));
+                                },
+                              ),
+                            )
                             .toList(),
                       ),
                       const SizedBox(height: 8),
@@ -560,7 +578,10 @@ class _BookingFormSheetState extends State<_BookingFormSheet> {
                           itemBuilder: (context, index) {
                             final seat = widget.seats[index];
                             final isSelected = _selectedSeats.any(
-                                (s) => s.id == seat.id || s.seatNumber == seat.seatNumber);
+                              (s) =>
+                                  s.id == seat.id ||
+                                  s.seatNumber == seat.seatNumber,
+                            );
                             return CheckboxListTile(
                               title: Text(seat.seatNumber),
                               value: isSelected,
@@ -569,7 +590,9 @@ class _BookingFormSheetState extends State<_BookingFormSheet> {
                                   if (checked == true) {
                                     _selectedSeats.add(seat);
                                   } else {
-                                    _selectedSeats.removeWhere((s) => s.id == seat.id);
+                                    _selectedSeats.removeWhere(
+                                      (s) => s.id == seat.id,
+                                    );
                                   }
                                 });
                               },
@@ -590,9 +613,18 @@ class _BookingFormSheetState extends State<_BookingFormSheet> {
                   ),
                   items: const [
                     DropdownMenuItem(value: 'pending', child: Text('Pending')),
-                    DropdownMenuItem(value: 'confirmed', child: Text('Confirmed')),
-                    DropdownMenuItem(value: 'completed', child: Text('Completed')),
-                    DropdownMenuItem(value: 'cancelled', child: Text('Cancelled')),
+                    DropdownMenuItem(
+                      value: 'confirmed',
+                      child: Text('Confirmed'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'completed',
+                      child: Text('Completed'),
+                    ),
+                    DropdownMenuItem(
+                      value: 'cancelled',
+                      child: Text('Cancelled'),
+                    ),
                   ],
                   onChanged: (value) {
                     if (value == null) return;
@@ -612,7 +644,9 @@ class _BookingFormSheetState extends State<_BookingFormSheet> {
                           )
                         : const Icon(Icons.save),
                     label: Text(
-                      widget.booking == null ? 'Create Booking' : 'Update Booking',
+                      widget.booking == null
+                          ? 'Create Booking'
+                          : 'Update Booking',
                     ),
                   ),
                 ),

@@ -29,8 +29,8 @@ class Bus {
       status: json['status'] ?? 'active',
       seats: json['seats'] is List
           ? (json['seats'] as List<dynamic>)
-              .map((s) => Seat.fromJson(s as Map<String, dynamic>))
-              .toList()
+                .map((s) => Seat.fromJson(s as Map<String, dynamic>))
+                .toList()
           : const [],
     );
   }

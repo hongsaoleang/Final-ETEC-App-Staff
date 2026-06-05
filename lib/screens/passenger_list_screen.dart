@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:bus_staff_scanner/models/user.dart';
 import 'package:bus_staff_scanner/services/passenger_service.dart';
@@ -14,6 +16,7 @@ class _PassengerListScreenState extends State<PassengerListScreen> {
   List<User> _passengers = [];
   String? _errorMessage;
   final TextEditingController _searchController = TextEditingController();
+  Timer? _searchDebounce;
   String _searchQuery = '';
   final PassengerService _passengerService = PassengerService();
 
@@ -25,6 +28,7 @@ class _PassengerListScreenState extends State<PassengerListScreen> {
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -67,7 +71,8 @@ class _PassengerListScreenState extends State<PassengerListScreen> {
     setState(() {
       _searchQuery = query;
     });
-    _loadPassengers();
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 350), _loadPassengers);
   }
 
   @override

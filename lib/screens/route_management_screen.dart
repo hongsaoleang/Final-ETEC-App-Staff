@@ -186,7 +186,9 @@ class _RouteManagementScreenState extends State<RouteManagementScreen> {
                     subtitle: Text(
                       '${route.departureLocation} to ${route.destination}\n'
                       '${route.date} at ${route.departureTime} - ${route.arrivalTime}\n'
-                      '${route.bus?.busNumber ?? 'No bus'} - \$${route.basePrice.toStringAsFixed(2)}',
+                      '${route.bus?.busNumber ?? 'No bus'} - '
+                      '${route.availableSeats ?? route.bus?.capacity ?? 0} seats - '
+                      '\$${route.basePrice.toStringAsFixed(2)}',
                     ),
                     trailing: PopupMenuButton<String>(
                       onSelected: (value) {
@@ -393,6 +395,19 @@ class _RouteFormSheetState extends State<_RouteFormSheet> {
                   ],
                 ),
                 const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _routePresetChip('Phnom Penh', 'Siem Reap'),
+                      _routePresetChip('Phnom Penh', 'Battambang'),
+                      _routePresetChip('Phnom Penh', 'Sihanoukville'),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
                 TextFormField(
                   controller: _nameController,
                   decoration: const InputDecoration(
@@ -567,5 +582,21 @@ class _RouteFormSheetState extends State<_RouteFormSheet> {
   String _shortTime(String value) {
     if (value.length >= 5) return value.substring(0, 5);
     return value;
+  }
+
+  Widget _routePresetChip(String departure, String destination) {
+    return ActionChip(
+      avatar: const Icon(Icons.route, size: 18),
+      label: Text('$departure to $destination'),
+      onPressed: () {
+        setState(() {
+          _departureController.text = departure;
+          _destinationController.text = destination;
+          if (_nameController.text.trim().isEmpty) {
+            _nameController.text = '$departure to $destination';
+          }
+        });
+      },
+    );
   }
 }

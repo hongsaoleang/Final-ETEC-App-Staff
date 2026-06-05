@@ -6,7 +6,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class TicketService {
   final Dio _dio;
-  TicketService() : _dio = Dio(BaseOptions(baseUrl: apiBase)) {
+  TicketService()
+    : _dio = Dio(
+        BaseOptions(
+          baseUrl: apiBase,
+          connectTimeout: const Duration(seconds: 12),
+          receiveTimeout: const Duration(seconds: 20),
+          headers: {'Accept': 'application/json'},
+        ),
+      ) {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onError: (e, handler) {
@@ -54,7 +62,13 @@ class TicketService {
 
       if (response.statusCode == 200) {
         final data = response.data;
-        return Ticket.fromJson(data);
+        final ticketJson = data is Map<String, dynamic>
+            ? data['ticket'] ?? data['data'] ?? data
+            : data;
+        if (ticketJson is Map<String, dynamic>) {
+          return Ticket.fromJson(ticketJson);
+        }
+        throw Exception('Invalid ticket response from server');
       } else {
         throw Exception('Invalid ticket');
       }

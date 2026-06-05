@@ -11,7 +11,7 @@ class AuthProvider extends ChangeNotifier {
   User? get user => _user;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
-  
+
   bool get isLoggedIn => _user != null;
   bool get isStaff => _user?.roles.contains('staff') ?? false;
 
@@ -73,4 +73,3 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 }
-

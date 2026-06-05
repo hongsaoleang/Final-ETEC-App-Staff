@@ -37,7 +37,11 @@ class TicketResultWidget extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.check_circle_outline, color: Colors.green, size: 48),
+            const Icon(
+              Icons.check_circle_outline,
+              color: Colors.green,
+              size: 48,
+            ),
             const SizedBox(height: 24),
             Text(
               'Ticket Verified',
@@ -46,18 +50,66 @@ class TicketResultWidget extends StatelessWidget {
             const SizedBox(height: 24),
             const Divider(),
             const SizedBox(height: 16),
-            _buildInfoRow(Icons.person, 'Passenger Name', ticket!.passengerName ?? 'Unknown'),
+            _buildInfoRow(
+              Icons.person,
+              'Passenger Name',
+              ticket!.passengerName ?? 'Unknown',
+            ),
             const SizedBox(height: 8),
-            _buildInfoRow(Icons.email, 'Email', ticket!.passengerEmail ?? 'Not provided'),
+            _buildInfoRow(
+              Icons.email,
+              'Email',
+              ticket!.passengerEmail ?? 'Not provided',
+            ),
             const SizedBox(height: 8),
-            _buildInfoRow(Icons.phone, 'Phone', ticket!.passengerPhone ?? 'Not provided'),
+            _buildInfoRow(
+              Icons.phone,
+              'Phone',
+              ticket!.passengerPhone ?? 'Not provided',
+            ),
+            const SizedBox(height: 8),
+            _buildInfoRow(
+              Icons.route,
+              'Route',
+              ticket!.routeName ?? 'Not provided',
+            ),
+            const SizedBox(height: 8),
+            _buildInfoRow(
+              Icons.flag,
+              'Destination',
+              ticket!.destination ?? 'Not provided',
+            ),
+            const SizedBox(height: 8),
+            _buildInfoRow(
+              Icons.event_seat,
+              'Seats',
+              ticket!.seatNumbers ?? 'Not assigned',
+            ),
+            const SizedBox(height: 8),
+            _buildInfoRow(
+              Icons.payments,
+              'Payment',
+              _formatStatus(ticket!.paymentStatus),
+            ),
+            const SizedBox(height: 8),
+            _buildInfoRow(
+              Icons.info,
+              'Booking',
+              _formatStatus(ticket!.bookingStatus),
+            ),
+            const SizedBox(height: 8),
+            _buildInfoRow(
+              ticket!.checkedIn ? Icons.verified : Icons.pending_actions,
+              'Check-in',
+              ticket!.checkedIn ? 'Checked in' : 'Not checked in',
+            ),
             const SizedBox(height: 24),
             const Divider(),
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: onCheckIn,
+                onPressed: ticket!.checkedIn ? null : onCheckIn,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,
                   padding: const EdgeInsets.symmetric(vertical: 16),
@@ -65,8 +117,10 @@ class TicketResultWidget extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: const Text(
-                  'Check In Passenger',
+                child: Text(
+                  ticket!.checkedIn
+                      ? 'Already Checked In'
+                      : 'Check In Passenger',
                   style: TextStyle(fontSize: 16, color: Colors.white),
                 ),
               ),
@@ -75,6 +129,18 @@ class TicketResultWidget extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _formatStatus(String? status) {
+    if (status == null || status.trim().isEmpty) return 'Unknown';
+    return status
+        .split('_')
+        .map(
+          (part) => part.isEmpty
+              ? part
+              : '${part[0].toUpperCase()}${part.substring(1)}',
+        )
+        .join(' ');
   }
 
   Widget _buildInfoRow(IconData icon, String label, String value) {
@@ -93,7 +159,10 @@ class TicketResultWidget extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 value,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ],
           ),

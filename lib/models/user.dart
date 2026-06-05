@@ -35,7 +35,9 @@ class User {
       isVerified: json['is_verified'] ?? false,
       roles: json['roles'] == null
           ? const []
-          : List<String>.from(json['roles'].map((role) => role is String ? role : role['name'])),
+          : List<String>.from(
+              json['roles'].map((role) => role is String ? role : role['name']),
+            ),
     );
   }
 
@@ -53,4 +55,3 @@ class User {
     };
   }
 }
-

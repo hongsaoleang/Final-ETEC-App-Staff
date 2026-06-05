@@ -5,6 +5,7 @@ class RouteBooking {
   final String passengerEmail;
   final String? passengerPhone;
   final String status;
+  final String paymentStatus;
   final double totalAmount;
   final String? ticketNumber;
   final bool checkedIn;
@@ -17,6 +18,7 @@ class RouteBooking {
     required this.passengerEmail,
     this.passengerPhone,
     required this.status,
+    required this.paymentStatus,
     required this.totalAmount,
     this.ticketNumber,
     required this.checkedIn,
@@ -30,6 +32,9 @@ class RouteBooking {
     final ticket = json['ticket'] is Map<String, dynamic>
         ? json['ticket'] as Map<String, dynamic>
         : <String, dynamic>{};
+    final payment = json['payment'] is Map<String, dynamic>
+        ? json['payment'] as Map<String, dynamic>
+        : <String, dynamic>{};
     final details = json['booking_details'] is List
         ? json['booking_details'] as List<dynamic>
         : const <dynamic>[];
@@ -41,6 +46,7 @@ class RouteBooking {
       passengerEmail: user['email'] ?? '',
       passengerPhone: user['phone_number'],
       status: json['status'] ?? '',
+      paymentStatus: json['payment_status'] ?? payment['status'] ?? 'unknown',
       totalAmount: double.tryParse('${json['total_amount'] ?? 0}') ?? 0,
       ticketNumber: ticket['ticket_number'],
       checkedIn: ticket['check_in'] != null,

@@ -38,11 +38,13 @@ class _SplashScreenState extends State<SplashScreen> {
           children: [
             Icon(Icons.directions_bus, size: 80, color: Colors.green),
             SizedBox(height: 20),
-            Text('Bus Staff', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            Text(
+              'Bus Staff',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
           ],
         ),
       ),
     );
   }
 }
-

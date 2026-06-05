@@ -10,6 +10,7 @@ class BusRoute {
   final String date;
   final Bus? bus;
   final double basePrice;
+  final int? availableSeats;
   final String status;
 
   BusRoute({
@@ -22,6 +23,7 @@ class BusRoute {
     required this.date,
     this.bus,
     required this.basePrice,
+    this.availableSeats,
     required this.status,
   });
 
@@ -38,6 +40,7 @@ class BusRoute {
           ? Bus.fromJson(json['bus'])
           : null,
       basePrice: double.tryParse('${json['base_price'] ?? 0}') ?? 0,
+      availableSeats: int.tryParse('${json['available_seats'] ?? ''}'),
       status: json['status'] ?? 'scheduled',
     );
   }

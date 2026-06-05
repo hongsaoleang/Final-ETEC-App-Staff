@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:bus_staff_scanner/screens/dashboard_screen.dart';
 import 'package:bus_staff_scanner/screens/scan_screen.dart';
+import 'package:bus_staff_scanner/screens/booking_list_screen.dart';
 import 'package:bus_staff_scanner/screens/passenger_list_screen.dart';
 import 'package:bus_staff_scanner/screens/route_management_screen.dart';
 import 'package:bus_staff_scanner/screens/statistics_screen.dart';
@@ -15,7 +17,9 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
   static const List<Widget> _widgetOptions = <Widget>[
+    DashboardScreen(),
     ScanScreen(),
+    BookingListScreen(),
     RouteManagementScreen(),
     PassengerListScreen(),
     StatisticsScreen(),
@@ -30,20 +34,22 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _selectedIndex,
-        children: _widgetOptions,
-      ),
+      body: IndexedStack(index: _selectedIndex, children: _widgetOptions),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.dashboard),
+            label: 'Dashboard',
+          ),
           BottomNavigationBarItem(
             icon: Icon(Icons.qr_code_scanner),
             label: 'Scan',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.route),
-            label: 'Routes',
+            icon: Icon(Icons.confirmation_number),
+            label: 'Bookings',
           ),
+          BottomNavigationBarItem(icon: Icon(Icons.route), label: 'Routes'),
           BottomNavigationBarItem(
             icon: Icon(Icons.people),
             label: 'Passengers',
@@ -53,6 +59,7 @@ class _HomeScreenState extends State<HomeScreen> {
             label: 'Statistics',
           ),
         ],
+        type: BottomNavigationBarType.fixed,
         currentIndex: _selectedIndex,
         selectedItemColor: Theme.of(context).colorScheme.primary,
         onTap: _onItemTapped,
@@ -60,4 +67,3 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
-

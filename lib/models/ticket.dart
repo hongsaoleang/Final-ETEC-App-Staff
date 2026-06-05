@@ -7,6 +7,8 @@ class Ticket {
   final String? routeName;
   final String? destination;
   final String? seatNumbers;
+  final String? bookingStatus;
+  final String? paymentStatus;
   final bool checkedIn;
 
   Ticket({
@@ -18,6 +20,8 @@ class Ticket {
     this.routeName,
     this.destination,
     this.seatNumbers,
+    this.bookingStatus,
+    this.paymentStatus,
     this.checkedIn = false,
   });
 
@@ -31,6 +35,9 @@ class Ticket {
     final route = booking['bus_route'] is Map<String, dynamic>
         ? booking['bus_route'] as Map<String, dynamic>
         : <String, dynamic>{};
+    final payment = booking['payment'] is Map<String, dynamic>
+        ? booking['payment'] as Map<String, dynamic>
+        : <String, dynamic>{};
     final details = booking['booking_details'] is List
         ? booking['booking_details'] as List<dynamic>
         : const <dynamic>[];
@@ -38,7 +45,9 @@ class Ticket {
         .map((detail) {
           if (detail is! Map<String, dynamic>) return '';
           final seat = detail['seat'];
-          if (seat is Map<String, dynamic>) return '${seat['seat_number'] ?? ''}';
+          if (seat is Map<String, dynamic>) {
+            return '${seat['seat_number'] ?? ''}';
+          }
           return '';
         })
         .where((seat) => seat.isNotEmpty)
@@ -53,6 +62,11 @@ class Ticket {
       routeName: route['name'],
       destination: route['destination'],
       seatNumbers: seatNumbers.isEmpty ? null : seatNumbers,
+      bookingStatus: json['booking_status'] ?? booking['status'],
+      paymentStatus:
+          json['payment_status'] ??
+          booking['payment_status'] ??
+          payment['status'],
       checkedIn: json['check_in'] != null,
     );
   }

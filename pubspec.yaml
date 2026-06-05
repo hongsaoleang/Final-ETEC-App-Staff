@@ -46,13 +46,13 @@ dependencies:
   shared_preferences: ^2.2.2
 
   # QR code scanner
-  qr_code_scanner: ^1.0.1
+  mobile_scanner: ^7.2.0
+
+  # Image picker for scanning QR codes from gallery
+  image_picker: ^1.2.2
 
   # For generating QR codes (if needed)
   qr: ^3.0.2
-
-  # Camera for live preview
-  camera: ^0.10.5+5
 
 dev_dependencies:
   flutter_test:

@@ -13,7 +13,12 @@ class RouteService {
 
   RouteService()
     : _dio = Dio(
-        BaseOptions(baseUrl: apiBase, headers: {'Accept': 'application/json'}),
+        BaseOptions(
+          baseUrl: apiBase,
+          connectTimeout: const Duration(seconds: 12),
+          receiveTimeout: const Duration(seconds: 20),
+          headers: {'Accept': 'application/json'},
+        ),
       ) {
     _dio.interceptors.add(
       InterceptorsWrapper(
@@ -182,6 +187,31 @@ class RouteService {
     });
   }
 
+  Future<List<RouteBooking>> getAllBookings() async {
+    return _request(() async {
+      await _setAuthHeader();
+      try {
+        final response = await _dio.get('/staff/bookings');
+        final data = response.data;
+        final bookings = data is List
+            ? data
+            : data is Map<String, dynamic>
+            ? data['bookings'] ?? data['data'] ?? []
+            : [];
+        return (bookings as List<dynamic>)
+            .map((json) => RouteBooking.fromJson(json as Map<String, dynamic>))
+            .toList();
+      } on DioException catch (error) {
+        if (error.response?.statusCode != 404) rethrow;
+        final routes = await getRoutes();
+        final bookingGroups = await Future.wait(
+          routes.map((route) => getRouteBookings(route.id)),
+        );
+        return bookingGroups.expand((group) => group).toList();
+      }
+    });
+  }
+
   Future<RouteBooking> updateBookingStatus(int bookingId, String status) async {
     return _request(() async {
       await _setAuthHeader();
@@ -237,10 +267,7 @@ class RouteService {
       if (seats != null) data['seats'] = seats;
       if (status != null) data['status'] = status;
 
-      final response = await _dio.put(
-        '/staff/bookings/$bookingId',
-        data: data,
-      );
+      final response = await _dio.put('/staff/bookings/$bookingId', data: data);
       return RouteBooking.fromJson(response.data as Map<String, dynamic>);
     });
   }
