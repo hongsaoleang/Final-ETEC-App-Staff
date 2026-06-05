@@ -1,3 +1,4 @@
+import 'package:bus_staff_scanner/services/api_response.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -7,7 +8,11 @@ class StatisticsService {
   final Dio _dio;
   StatisticsService()
     : _dio = Dio(
-        BaseOptions(baseUrl: apiBase, headers: {'Accept': 'application/json'}),
+        BaseOptions(
+          baseUrl: apiBase,
+          responseType: ResponseType.plain,
+          headers: {'Accept': 'application/json'},
+        ),
       ) {
     _dio.interceptors.add(
       InterceptorsWrapper(
@@ -37,7 +42,7 @@ class StatisticsService {
       final response = await _dio.get('/staff/boarding-statistics');
 
       if (response.statusCode == 200) {
-        return Map<String, dynamic>.from(response.data);
+        return Map<String, dynamic>.from(decodeApiResponse(response.data));
       } else {
         throw Exception('Failed to load statistics');
       }

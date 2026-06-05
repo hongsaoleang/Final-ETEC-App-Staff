@@ -1,4 +1,5 @@
 import 'package:bus_staff_scanner/models/user.dart';
+import 'package:bus_staff_scanner/services/api_response.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -12,6 +13,7 @@ class AuthService {
           baseUrl: apiBase,
           connectTimeout: const Duration(seconds: 8),
           receiveTimeout: const Duration(seconds: 12),
+          responseType: ResponseType.plain,
           headers: {'Accept': 'application/json'},
         ),
       ) {
@@ -76,7 +78,10 @@ class AuthService {
         data: {'email': email, 'password': password},
       );
       if (response.statusCode == 200) {
-        final data = response.data;
+        final data = decodeApiResponse(response.data);
+        if (data is! Map<String, dynamic>) {
+          throw Exception('Invalid login response from server');
+        }
         final token = data['access_token'] as String;
         await _saveToken(token);
         _dio.options.headers['Authorization'] = 'Bearer $token';
@@ -114,7 +119,7 @@ class AuthService {
       _dio.options.headers['Authorization'] = 'Bearer $token';
       final response = await _dio.get('/me');
       if (response.statusCode == 200) {
-        final data = response.data;
+        final data = decodeApiResponse(response.data);
         final userJson = data is Map<String, dynamic>
             ? data['user'] ?? data['data'] ?? data
             : data;

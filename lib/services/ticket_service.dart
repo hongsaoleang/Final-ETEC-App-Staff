@@ -1,4 +1,5 @@
 import 'package:bus_staff_scanner/models/ticket.dart';
+import 'package:bus_staff_scanner/services/api_response.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:bus_staff_scanner/config.dart';
@@ -12,6 +13,7 @@ class TicketService {
           baseUrl: apiBase,
           connectTimeout: const Duration(seconds: 12),
           receiveTimeout: const Duration(seconds: 20),
+          responseType: ResponseType.plain,
           headers: {'Accept': 'application/json'},
         ),
       ) {
@@ -61,7 +63,7 @@ class TicketService {
       );
 
       if (response.statusCode == 200) {
-        final data = response.data;
+        final data = decodeApiResponse(response.data);
         final ticketJson = data is Map<String, dynamic>
             ? data['ticket'] ?? data['data'] ?? data
             : data;

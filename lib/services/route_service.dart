@@ -4,6 +4,7 @@ import 'package:bus_staff_scanner/models/bus_route.dart';
 import 'package:bus_staff_scanner/models/route_booking.dart';
 import 'package:bus_staff_scanner/models/seat.dart';
 import 'package:bus_staff_scanner/models/user.dart';
+import 'package:bus_staff_scanner/services/api_response.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -17,6 +18,7 @@ class RouteService {
           baseUrl: apiBase,
           connectTimeout: const Duration(seconds: 12),
           receiveTimeout: const Duration(seconds: 20),
+          responseType: ResponseType.plain,
           headers: {'Accept': 'application/json'},
         ),
       ) {
@@ -41,6 +43,7 @@ class RouteService {
   }
 
   List<dynamic> _listFromResponse(dynamic responseData) {
+    responseData = decodeApiResponse(responseData);
     if (responseData is List) return responseData;
     if (responseData is Map<String, dynamic> && responseData['data'] is List) {
       return responseData['data'] as List<dynamic>;
@@ -49,7 +52,7 @@ class RouteService {
   }
 
   String _messageFromDio(DioException error) {
-    final data = error.response?.data;
+    final data = decodeApiResponse(error.response?.data);
 
     if (data is Map<String, dynamic>) {
       if (data['message'] != null) return data['message'].toString();
@@ -127,7 +130,9 @@ class RouteService {
           'status': 'scheduled',
         },
       );
-      return BusRoute.fromJson(response.data as Map<String, dynamic>);
+      return BusRoute.fromJson(
+        decodeApiResponse(response.data) as Map<String, dynamic>,
+      );
     });
   }
 
@@ -159,7 +164,9 @@ class RouteService {
           'status': status,
         },
       );
-      return BusRoute.fromJson(response.data as Map<String, dynamic>);
+      return BusRoute.fromJson(
+        decodeApiResponse(response.data) as Map<String, dynamic>,
+      );
     });
   }
 
@@ -174,8 +181,9 @@ class RouteService {
     return _request(() async {
       await _setAuthHeader();
       final response = await _dio.get('/staff/routes/$routeId/bookings');
-      final data = response.data is Map<String, dynamic>
-          ? response.data as Map<String, dynamic>
+      final responseData = decodeApiResponse(response.data);
+      final data = responseData is Map<String, dynamic>
+          ? responseData
           : <String, dynamic>{};
       final bookings = data['bookings'] is List
           ? data['bookings'] as List<dynamic>
@@ -192,7 +200,7 @@ class RouteService {
       await _setAuthHeader();
       try {
         final response = await _dio.get('/staff/bookings');
-        final data = response.data;
+        final data = decodeApiResponse(response.data);
         final bookings = data is List
             ? data
             : data is Map<String, dynamic>
@@ -219,7 +227,9 @@ class RouteService {
         '/staff/bookings/$bookingId/status',
         data: {'status': status},
       );
-      return RouteBooking.fromJson(response.data as Map<String, dynamic>);
+      return RouteBooking.fromJson(
+        decodeApiResponse(response.data) as Map<String, dynamic>,
+      );
     });
   }
 
@@ -227,7 +237,9 @@ class RouteService {
     return _request(() async {
       await _setAuthHeader();
       final response = await _dio.delete('/staff/bookings/$bookingId');
-      return RouteBooking.fromJson(response.data as Map<String, dynamic>);
+      return RouteBooking.fromJson(
+        decodeApiResponse(response.data) as Map<String, dynamic>,
+      );
     });
   }
 
@@ -248,7 +260,9 @@ class RouteService {
           'status': status,
         },
       );
-      return RouteBooking.fromJson(response.data as Map<String, dynamic>);
+      return RouteBooking.fromJson(
+        decodeApiResponse(response.data) as Map<String, dynamic>,
+      );
     });
   }
 
@@ -268,7 +282,9 @@ class RouteService {
       if (status != null) data['status'] = status;
 
       final response = await _dio.put('/staff/bookings/$bookingId', data: data);
-      return RouteBooking.fromJson(response.data as Map<String, dynamic>);
+      return RouteBooking.fromJson(
+        decodeApiResponse(response.data) as Map<String, dynamic>,
+      );
     });
   }
 
@@ -276,8 +292,9 @@ class RouteService {
     return _request(() async {
       await _setAuthHeader();
       final response = await _dio.get('/bus-routes/$routeId');
-      final data = response.data is Map<String, dynamic>
-          ? response.data as Map<String, dynamic>
+      final responseData = decodeApiResponse(response.data);
+      final data = responseData is Map<String, dynamic>
+          ? responseData
           : <String, dynamic>{};
       final bus = data['bus'] is Map<String, dynamic>
           ? data['bus'] as Map<String, dynamic>
@@ -299,9 +316,12 @@ class RouteService {
         '/staff/search-passenger',
         data: {'query': query},
       );
-      final data = response.data is List
-          ? response.data as List<dynamic>
-          : response.data['data'] ?? [];
+      final responseData = decodeApiResponse(response.data);
+      final data = responseData is List
+          ? responseData
+          : responseData is Map<String, dynamic>
+          ? responseData['data'] ?? []
+          : [];
       return data
           .map((json) => User.fromJson(json as Map<String, dynamic>))
           .toList();
@@ -316,9 +336,12 @@ class RouteService {
         '/staff/search-passenger',
         data: {'query': searchQuery},
       );
-      final data = response.data is List
-          ? response.data as List<dynamic>
-          : response.data['data'] ?? [];
+      final responseData = decodeApiResponse(response.data);
+      final data = responseData is List
+          ? responseData
+          : responseData is Map<String, dynamic>
+          ? responseData['data'] ?? []
+          : [];
       return data
           .map((json) => User.fromJson(json as Map<String, dynamic>))
           .toList();

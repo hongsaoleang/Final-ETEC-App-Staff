@@ -1,4 +1,5 @@
 import 'package:bus_staff_scanner/models/user.dart';
+import 'package:bus_staff_scanner/services/api_response.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -6,7 +7,14 @@ import 'package:bus_staff_scanner/config.dart';
 
 class PassengerService {
   final Dio _dio;
-  PassengerService() : _dio = Dio(BaseOptions(baseUrl: apiBase)) {
+  PassengerService()
+    : _dio = Dio(
+        BaseOptions(
+          baseUrl: apiBase,
+          responseType: ResponseType.plain,
+          headers: {'Accept': 'application/json'},
+        ),
+      ) {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onError: (e, handler) {
@@ -45,7 +53,7 @@ class PassengerService {
       );
 
       if (response.statusCode == 200) {
-        final dynamic responseData = response.data;
+        final dynamic responseData = decodeApiResponse(response.data);
         final List<dynamic> data = responseData is List
             ? responseData
             : responseData['data'] ?? [];
