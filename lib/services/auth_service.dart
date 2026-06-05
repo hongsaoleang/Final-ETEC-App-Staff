@@ -6,7 +6,15 @@ import 'package:bus_staff_scanner/config.dart';
 
 class AuthService {
   final Dio _dio;
-  AuthService() : _dio = Dio(BaseOptions(baseUrl: apiBase)) {
+  AuthService()
+    : _dio = Dio(
+        BaseOptions(
+          baseUrl: apiBase,
+          connectTimeout: const Duration(seconds: 8),
+          receiveTimeout: const Duration(seconds: 12),
+          headers: {'Accept': 'application/json'},
+        ),
+      ) {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onError: (e, handler) {
@@ -61,7 +69,7 @@ class AuthService {
         if (resp is Map && resp['message'] != null) {
           throw Exception(resp['message']);
         }
-        throw Exception(e.message);
+        throw Exception(e.message ?? 'Login request failed');
       }
       rethrow;
     }
@@ -83,9 +91,23 @@ class AuthService {
       _dio.options.headers['Authorization'] = 'Bearer $token';
       final response = await _dio.get('/me');
       if (response.statusCode == 200) {
-        return User.fromJson(response.data);
+        final data = response.data;
+        final userJson = data is Map<String, dynamic>
+            ? data['user'] ?? data['data'] ?? data
+            : data;
+        if (userJson is Map<String, dynamic>) {
+          final user = User.fromJson(userJson);
+          if (user.roles.contains('staff') || user.roles.contains('admin')) {
+            return user;
+          }
+        }
+        await clearToken();
+        return null;
       }
     } catch (e) {
+      if (e is DioException && e.response?.statusCode == 401) {
+        await clearToken();
+      }
       if (kDebugMode) {
         print('Get current user error: $e');
       }

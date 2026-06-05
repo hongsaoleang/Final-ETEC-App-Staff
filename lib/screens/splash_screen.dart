@@ -13,19 +13,26 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _checkAuthStatus();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkAuthStatus());
   }
 
   Future<void> _checkAuthStatus() async {
-    await Future.delayed(const Duration(seconds: 2)); // Simulate splash delay
-    if (!mounted) return;
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final hasUser = await authProvider.loadUser();
+    final hasUser = await authProvider.loadUser().timeout(
+      const Duration(seconds: 15),
+      onTimeout: () => false,
+    );
     if (!mounted) return;
     if (hasUser) {
       Navigator.of(context).pushReplacementNamed('/home');
     } else {
       Navigator.of(context).pushReplacementNamed('/login');
+      final message = authProvider.errorMessage;
+      if (message != null && message != 'Failed to load user') {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
+      }
     }
   }
 
