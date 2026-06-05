@@ -1,3 +1,4 @@
+import 'package:bus_staff_scanner/config.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:bus_staff_scanner/providers/auth_provider.dart';
@@ -81,6 +82,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 },
               ),
               const SizedBox(height: 24),
+              Text(
+                'API: $apiBase',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 12),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(

@@ -42,6 +42,33 @@ class AuthService {
     await prefs.remove('auth_token');
   }
 
+  String _messageFromDio(DioException error) {
+    final data = error.response?.data;
+    if (data is Map && data['message'] != null) {
+      return data['message'].toString();
+    }
+
+    switch (error.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.receiveTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.connectionError:
+        return 'Cannot connect to the API at $apiBase. Make sure Laravel is running and this device can reach that address.';
+      case DioExceptionType.badResponse:
+        final statusCode = error.response?.statusCode;
+        if (statusCode == 401 || statusCode == 422) {
+          return 'Invalid email or password.';
+        }
+        return 'Server returned ${statusCode ?? 'an error'}. Please try again.';
+      case DioExceptionType.cancel:
+        return 'Login request was cancelled.';
+      case DioExceptionType.badCertificate:
+        return 'The API SSL certificate is not trusted.';
+      case DioExceptionType.unknown:
+        return error.message ?? 'Login request failed.';
+    }
+  }
+
   Future<User?> login(String email, String password) async {
     try {
       final response = await _dio.post(
@@ -65,11 +92,7 @@ class AuthService {
         print('Login error: $e');
       }
       if (e is DioException) {
-        final resp = e.response?.data;
-        if (resp is Map && resp['message'] != null) {
-          throw Exception(resp['message']);
-        }
-        throw Exception(e.message ?? 'Login request failed');
+        throw Exception(_messageFromDio(e));
       }
       rethrow;
     }
